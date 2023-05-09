@@ -1,1 +1,5 @@
 # Standard-bulk-RNAsequencing-pipeline-for-Angiogenic-Neutrophils-manuscript
+
+Neutrophils (PMNs) are a major immune cells localized to active ulcerative colitis (UC) lesions and the microenvironment of colorectal cancer (CRC). Given the emerging evidence of PMN phenotypic and functional heterogeneity, we analyzed the transcriptomic landscape of PMNs in blood and tissue during the spatiotemporal transition from inflammatory ulceration to CRC. Based on their transcriptional programs, PMNs were effectively stratified into distinct spatial compartments of peripheral blood, inflamed colon tissue, and the tumor niche. 
+
+This Github repository provides codes for standard bulk RNAsequecing pipelines used in this project. This includes trimming by Trimmomatic, STAR alignment to mm3 murine genome (neutrophil RNAseq in AOM/DSS model) and hg38 human genome (PDX tumor cell RNAseq in PDX model), identification of DEGs using DEseq2 R Bioconductor package, gene ontology analysis by ClusterProfiler, and GSEA by HTSAnalyzeR.
