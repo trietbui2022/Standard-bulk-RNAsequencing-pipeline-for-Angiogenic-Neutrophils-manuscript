@@ -20,7 +20,7 @@ barplot(go_res, showCategory=10, title="Enriched Gene Ontology Terms (BP)", lege
 #Construct GO networks to show relationships among enriched GO terms and GO component genes
 go_bp <- simplify(go_res[[1]])
 go_genes <- getGenes(go_bp)
-go_network <- enricher(gene=go_genes, TERM2GENE=org.Hs.eg.db, pvalueCutoff=0.05, pAdjustMethod="BH") #Set p-value cutoff and Benjamini-Hochberg correction
+go_network <- enricher(gene=go_genes, TERM2GENE=org.mm.eg.db #mouse or #org.Hs.eg.db #human, pvalueCutoff=0.05, pAdjustMethod="BH") #Set p-value cutoff and Benjamini-Hochberg correction
 go_network <- simplify(go_network)
 
 #GO output as dotplots
