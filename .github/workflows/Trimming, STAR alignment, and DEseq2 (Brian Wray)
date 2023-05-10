@@ -1,0 +1,99 @@
+# Standard bulk RNAsequencing procedure -Strimming of end-paired and STAR aligment (Linux)
+####Sumagin_05 (mouse AOM/DSS - neutrophil RNA)
+
+# Trimming of adapter sequences and low-quality reads (<20 reads)
+trim_galore  --suppress_warn -o trimmed_reads --stringency 5 -e 0.1 --length 20 -q 20 reads/<sample>_R1.fastq.gz
+ 
+# Alignment to mouse mm10 genome 
+STAR --genomeDir /projects/b1012/xvault/REFERENCES/builds/mm10/STARindex 
+--readFilesIn trimmed_reads/<sample>_R1_trimmed.fq.gz --readFilesCommand zcat --outFilterType BySJout 
+--outSJfilterCountUniqueMin -1 2 2 2 --outSJfilterCountTotalMin -1 2 2 2 --outFilterIntronMotifs RemoveNoncanonical 
+--runThreadN 12 --outReadsUnmapped Fastx --outFileNamePrefix star/<sample>_ --outSAMtype BAM SortedByCoordinate --outFilterMultimapNmax 2 
+--outFilterMismatchNmax 10 --outFilterMismatchNoverLmax 0.3 --limitBAMsortRAM 40000000000 #Outputs as BAM files for each sample.
+ 
+# Counting reads mapped to mm10 genes using HTseq count
+htseq-count -r pos -s no -f bam -t exon -i gene_id -m union --nonunique none -q star/<sample>_Aligned.sortedByCoord.out.bam 
+/projects/b1012/xvault/REFERENCES/builds/mm10/STARindex/Ensembl.gtf > htseq/<sample>.counts 
+#Outputs as count matrix tables.
+#######
+# Load count data in RStudio
+# The matrix count table was loaded into R as a matrix with genes as rows and samples as columns
+
+#DESeq2 to normalize normalize counts and perform differential expression analysis
+sampleTable = as.data.frame( read.table( "sampleFile.txt" ) )
+tableFactors = length(colnames(sampleTable)) - 2
+ 
+colnames(sampleTable) = c('name','file','group')
+sampleTable = sampleTable[,c("name","file","group")]
+sampleTable$group = factor(sampleTable$group,unique(sampleTable$group))
+dds = DESeqDataSetFromHTSeqCount(sampleTable = sampleTable, design = ~ group, directory = "htseqDir")
+ 
+dds=estimateSizeFactors(dds)
+ddsR = DESeq(dds, fitType = fit_type) #Identify DEGs
+warnings(file=paste0(directory, '/', prefix, '_warnings.txt'))
+res = results(ddsR, contrast = c("group", <experimental_group>, <control_group>) )
+
+#P value adjustment by Benjamini-Hochberg (BH)
+res$status = 'OK'
+if (any(mcols(ddsR)$cooksOutlier,na.rm=T)) res[which(mcols(ddsR)$cooksOutlier),]$status = 'Outlier'
+fil = res$baseMean > 10
+res[fil,]$padj = p.adjust(res[fil,]$pvalue, 'BH') #
+if (length(res[!fil,]$padj != 0)) {
+  res[!fil,]$padj = NA
+}
+if (length(res[!fil,]$status != 0)) {
+  res[!fil,]$status = 'Low'
+}
+
+
+
+####Sumagin_12 (human PDX - PDX tumor cell RNA)
+# Trimming of adapter sequences and low-quality reads (<20 reads)
+trim_galore  --suppress_warn -o trimmed_reads --stringency 5 -e 0.1 --length 20 -q 20 reads/<sample>_R1.fastq.gz
+ 
+# Alignment to human hg38 genome 
+STAR --genomeDir /projects/b1012/xvault/REFERENCES/builds/hg38/STARindex 
+--readFilesIn trimmed_reads/<sample>_R1_trimmed.fq.gz --readFilesCommand zcat 
+--outFilterType BySJout --outSJfilterCountUniqueMin -1 2 2 2 --outSJfilterCountTotalMin -1 2 2 2 --outFilterIntronMotifs RemoveNoncanonical 
+--runThreadN 12 --outReadsUnmapped Fastx --outFileNamePrefix star/<sample>_ --outSAMtype BAM SortedByCoordinate --outFilterMultimapNmax 2 
+--outFilterMismatchNmax 10 --outFilterMismatchNoverLmax 0.3 --limitBAMsortRAM 40000000000 #Outputs as BAM files for each sample.
+ 
+# Counting reads mapped to hg38 genes using HTseq count
+htseq-count -r pos -s no -f bam -t exon -i gene_id -m union --nonunique none -q star/<sample>_Aligned.sortedByCoord.out.bam 
+/projects/b1012/xvault/REFERENCES/builds/hg38/STARindex/Ensembl.gtf > htseq/<sample>.counts
+ 
+# Load count data in RStudio
+# The matrix count table was loaded into R as a matrix with genes as rows and samples as columns 
+ 
+# Load table for DESeq2
+sampleTable = as.data.frame( read.table( "sampleFile.txt" ) )
+tableFactors = length(colnames(sampleTable)) - 2
+ 
+colnames(sampleTable) = c('name','file','group')
+sampleTable = sampleTable[,c("name","file","group")]
+sampleTable$group = factor(sampleTable$group,unique(sampleTable$group))
+dds = DESeqDataSetFromHTSeqCount(sampleTable = sampleTable, design = ~ group, directory = "htseqDir")
+ 
+## Main DESeq2
+dds=estimateSizeFactors(dds)
+ddsR = DESeq(dds, fitType = fit_type)
+warnings(file=paste0(directory, '/', prefix, '_warnings.txt'))
+res = results(ddsR, contrast = c("group", <experimental_group>, <control_group>) )
+ 
+res$status = 'OK'
+if (any(mcols(ddsR)$cooksOutlier,na.rm=T)) res[which(mcols(ddsR)$cooksOutlier),]$status = 'Outlier'
+fil = res$baseMean > 10
+res[fil,]$padj = p.adjust(res[fil,]$pvalue, 'BH') #Benjamini-Hochberg (BH) correction
+if (length(res[!fil,]$padj != 0)) {
+  res[!fil,]$padj = NA
+}
+if (length(res[!fil,]$status != 0)) {
+  res[!fil,]$status = 'Low'
+}
+ 
+
+
+
+
+
+
