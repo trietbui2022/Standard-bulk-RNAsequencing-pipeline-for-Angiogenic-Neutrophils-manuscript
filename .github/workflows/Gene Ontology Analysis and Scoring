@@ -1,0 +1,46 @@
+A. Gene Ontology Analysis
+Option 1. Input of DEG Gene Symbol into Metascape (https://metascape.org/gp/index.html#/main/) to generate GO terms and Metascape GO network.
+
+Option 2. Use clusterProfiler package to perform additional R-based GO enrichment and scoring
+# Load clusterProfiler and required libraries:
+library(clusterProfiler)
+library(dplyr)
+library(enrichplot)
+library(RColorBrewer)
+library(Rgraphviz)
+
+#Select DEGs with p-adj < 0.05 and log2FC > 1 compared to healthy blood or other compared samples
+gene_list <- rownames(res)[which(res$padj < 0.05 & abs(res$log2FoldChange) > 1)] #res is output of DEGs as count matrix (see DEseq2, input of tab-delimited text file with gene IDs as row names and sample IDs as column names)
+gene_list <- mapIds(org.Hs.eg.db, keys=gene_list, column="SYMBOL", keytype="ENSEMBL", multiVals="first")
+#Use gseGO function to perform Gene Ontology
+go_res <- gseGO(geneList=de_genes, OrgDb=org.mm.eg.db, ont="BP", pvalueCutoff=0.05, verbose=FALSE) #list of GO terms for mouse (AOM/DSS study) - mouse reference database R.3.8.2
+go_res <- gseGO(geneList=de_genes, OrgDb=org.Hs.eg.db, ont="BP", pvalueCutoff=0.05, verbose=FALSE) #list of GO terms for human (PDX study) - human reference database R.3.8.2
+barplot(go_res, showCategory=10, title="Enriched Gene Ontology Terms (BP)", legend=FALSE) #Outputs of GO terms by a bar plot ordered by p-values
+
+#Construct GO networks to show relationships among enriched GO terms and GO component genes
+go_bp <- simplify(go_res[[1]])
+go_genes <- getGenes(go_bp)
+go_network <- enricher(gene=go_genes, TERM2GENE=org.Hs.eg.db, pvalueCutoff=0.05, pAdjustMethod="BH") #Set p-value cutoff and Benjamini-Hochberg correction
+go_network <- simplify(go_network)
+
+#GO output as dotplots
+dotplot(go_network, showCategory=20, title="Gene Ontology Network (BP)", legend=TRUE) 
+png("go_network.png", width=1200, height=800)
+
+#GO output as barplots
+barplot(go_res, showCategory=10, title="Enriched Gene Ontology Terms (BP)", legend=FALSE)
+png("go_barplot.png", width=800, height=600)
+
+B. Gene ontology scoring
+#Normalize count data from DEGs list
+normalized_counts <- counts(dds, normalized = TRUE) #dds acquired as output of DESeq2() #see DEseq2 workflow
+go_enrichment <- enrichGO(gene = rownames(normalized_counts), universe = rownames(counts),OrgDb = org.ms.eg.db #or =org.Hs.eg.db for human,keyType = "ENSEMBL",ont = "BP",pAdjustMethod = "BH",qvalueCutoff = 0.05)
+top_terms <- head(go_enrichment, n = 10)$ID
+scores <- as.data.frame(go_enrichment)[as.data.frame(go_enrichment)$ID %in% top_terms, c("ID", "log10Pvalue")] #Score tables of GO terms
+
+#The resulting scores can be plotted as heatmap in Morpheus Broad Institute (https://software.broadinstitute.org/morpheus/)
+or via:
+ggplot(scores, aes(x = ID, y = log10Pvalue)) + geom_point() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(x = "GO Term", y = "-log10(p-value)", title = "Gene Ontology Term Enrichment")
+
+
+
