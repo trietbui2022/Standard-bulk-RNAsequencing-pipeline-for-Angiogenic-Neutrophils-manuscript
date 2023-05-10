@@ -1,4 +1,4 @@
-# Standard bulk RNAsequencing procedure -Strimming of end-paired and STAR aligment (Linux)
+# Standard bulk RNAsequencing procedure -Strimming of end-paired and STAR alignment (Linux)
 ####Sumagin_05 (mouse AOM/DSS - neutrophil RNA)
 
 # Trimming of adapter sequences and low-quality reads (<20 reads)
