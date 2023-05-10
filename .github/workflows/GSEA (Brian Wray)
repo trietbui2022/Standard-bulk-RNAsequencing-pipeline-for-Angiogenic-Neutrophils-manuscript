@@ -1,0 +1,11 @@
+#GSEA was performed by Brian Wray at Northwestern Biostatistic Core separately on 20 MSigDB databases (https://www.gsea-msigdb.org/gsea/msigdb) 
+using the following Linux code
+
+ava -cp /projects/b1012/xvault/software/GSEA/gsea-3.0.jar -Xmx4g xtools.gsea.GseaPreranked 
+-gmx /projects/b1012/xvault/software/GSEA/v7.5.1_gmt_files/<MSigDB> -norm meandiv -nperm 1000 -rnk <ranked_gene_list> 
+-scoring_scheme classic -rpt_label <MSigDB_label> -make_sets true -plot_top_x 500 -rnd_seed timestamp -set_max 5000 -set_min 15 -zip_report true 
+-out GSEA_results -gui false -create_svgs false #The output will be a table of enriched gene sets and their corresponding statistics
+
+#Outputs as p-values and NES can be plotted in Graphpad Prism or via the following R code:
+enrichment_res <- geneSetTest(res, geneSets=genesets, organism="Homo sapiens", geneIdType="ENSEMBL") #Res is input of GSEA enriched gene sets with p-values
+plotEnrichment(enrichment_res, top=20, title="Enriched Gene Sets #Human or #Mouse") #Plot GSEA enriched gene sets as barplots
