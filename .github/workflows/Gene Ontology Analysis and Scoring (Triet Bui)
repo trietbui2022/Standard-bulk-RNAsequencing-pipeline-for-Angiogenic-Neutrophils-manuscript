@@ -38,7 +38,7 @@ go_enrichment <- enrichGO(gene = rownames(normalized_counts), universe = rowname
 top_terms <- head(go_enrichment, n = 10)$ID
 scores <- as.data.frame(go_enrichment)[as.data.frame(go_enrichment)$ID %in% top_terms, c("ID", "log10Pvalue")] #Score tables of GO terms
 
-#The resulting scores can be plotted as heatmap in Morpheus Broad Institute (https://software.broadinstitute.org/morpheus/)
+#The resulting scores can be plotted as heatmap via Broad Institute Morpheus (https://software.broadinstitute.org/morpheus/)
 or via:
 ggplot(scores, aes(x = ID, y = log10Pvalue)) + geom_point() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(x = "GO Term", y = "-log10(p-value)", title = "Gene Ontology Term Enrichment")
 
