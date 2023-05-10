@@ -45,6 +45,21 @@ if (length(res[!fil,]$status != 0)) {
   res[!fil,]$status = 'Low'
 }
 
+#Generate hierarchical clustering heatmap of AOM/DSS neutrophils
+library(pheatmap)
+normalized_count <- counts(dds, normalized = TRUE)
+d <- dist(t(norm_counts), method = "euclidean") #Measure Euclidean distance 
+hc <- hclust(d, method = "complete") #Perform hierarchical clustering
+pheatmap(normalized_counts,
+         clustering_distance_rows = d,
+         clustering_distance_cols = d,
+         clustering_method = "complete",
+         show_rownames = FALSE,
+         show_colnames = FALSE,
+         color = colorRampPalette(c("navy", "yellow", "black"))(100),
+         main = "Hierarchical Clustering Heatmap")
+
+
 
 
 ####Sumagin_12 (human PDX - PDX tumor cell RNA)
